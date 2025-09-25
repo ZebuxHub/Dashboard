@@ -1,0 +1,66 @@
+{
+  "name": "Zebux Dashboard",
+  "description": "Universal Game Data Tracker with Real-time Sync and Beautiful UI",
+  "repository": "https://github.com/zebuxhub/zebux-dashboard",
+  "logo": "https://zebux-dashboard.dev/logo.png",
+  "keywords": [
+    "roblox",
+    "dashboard",
+    "game-tracker",
+    "real-time",
+    "nodejs",
+    "react"
+  ],
+  "website": "https://zebux-dashboard.dev",
+  "success_url": "/",
+  "stack": "container",
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "image": "heroku/nodejs",
+  "addons": [],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production",
+      "required": true
+    },
+    "ADMIN_USERNAME": {
+      "description": "Admin username for the admin panel",
+      "value": "user",
+      "required": true
+    },
+    "ADMIN_PASSWORD": {
+      "description": "Admin password for the admin panel",
+      "value": "password",
+      "required": true
+    },
+    "JWT_SECRET": {
+      "description": "Secret key for JWT tokens (will be auto-generated)",
+      "generator": "secret",
+      "required": true
+    },
+    "FRONTEND_URL": {
+      "description": "Frontend URL for CORS (auto-detected)",
+      "required": false
+    }
+  },
+  "scripts": {
+    "postdeploy": "echo 'Zebux Dashboard deployed successfully! Visit your app to get started.'"
+  },
+  "environments": {
+    "test": {
+      "scripts": {
+        "test": "npm test"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "sleepApplication": false,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "NODE_ENV": "production",
+        "PORT": "3000",
+        "ADMIN_USERNAME": "user",
+        "ADMIN_PASSWORD": "password",
+        "JWT_SECRET": "${{ RAILWAY_STATIC_URL }}-${{ RAILWAY_ENVIRONMENT }}-secret"
+      }
+    }
+  },
+  "regions": ["us-west1"],
+  "services": [
+    {
+      "name": "zebux-dashboard",
+      "source": {
+        "type": "image",
+        "image": "zebux-dashboard:latest"
+      },
+      "variables": {
+        "NODE_ENV": "production",
+        "PORT": "3000",
+        "ADMIN_USERNAME": "user",
+        "ADMIN_PASSWORD": "password"
+      }
+    }
+  ]
+}

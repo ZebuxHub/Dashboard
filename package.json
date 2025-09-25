@@ -1,0 +1,46 @@
+{
+  "name": "zebux-dashboard",
+  "version": "1.0.0",
+  "description": "Universal game data tracker with real-time sync and beautiful UI",
+  "main": "server.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "start": "cd backend && npm start",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "docker:build": "docker build -t zebux-dashboard .",
+    "docker:run": "docker run -p 3000:3000 zebux-dashboard",
+    "deploy:railway": "railway up",
+    "deploy:heroku": "git push heroku main",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "roblox",
+    "dashboard",
+    "game-tracker",
+    "real-time",
+    "react",
+    "nodejs"
+  ],
+  "author": "Zebux Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zebuxhub/zebux-dashboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zebuxhub/zebux-dashboard/issues"
+  },
+  "homepage": "https://zebux-dashboard.dev"
+}
