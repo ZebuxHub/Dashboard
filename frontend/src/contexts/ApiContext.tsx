@@ -38,7 +38,26 @@ export const ApiProvider = ({ children }: ApiProviderProps) => {
       const response = await fetch(url, defaultOptions);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Handle rate limiting specifically
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After') || '60';
+          throw new Error(`Rate limit exceeded. Please wait ${retryAfter} seconds before trying again.`);
+        }
+        
+        // Try to get error message from response
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          // If we can't parse JSON, use the default message
+        }
+        
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
