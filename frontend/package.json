@@ -31,7 +31,7 @@
   },
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build --mode production",
+    "build": "npx vite build --mode production",
     "preview": "vite preview --host"
   },
   "author": "Zebux Team",
