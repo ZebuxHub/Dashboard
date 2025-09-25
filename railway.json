@@ -15,8 +15,8 @@
       "variables": {
         "NODE_ENV": "production",
         "PORT": "3000",
-        "ADMIN_USERNAME": "user",
-        "ADMIN_PASSWORD": "password",
+        "ADMIN_USERNAME": "zimpyfile",
+        "ADMIN_PASSWORD": "050042767",
         "JWT_SECRET": "${{ RAILWAY_STATIC_URL }}-${{ RAILWAY_ENVIRONMENT }}-secret"
       }
     }
@@ -32,8 +32,8 @@
       "variables": {
         "NODE_ENV": "production",
         "PORT": "3000",
-        "ADMIN_USERNAME": "user",
-        "ADMIN_PASSWORD": "password"
+        "ADMIN_USERNAME": "zimpyfile",
+        "ADMIN_PASSWORD": "050042767"
       }
     }
   ]
