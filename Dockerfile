@@ -21,8 +21,11 @@ RUN cd frontend && npm install --legacy-peer-deps
 # Verify package.json content (debug)
 RUN cd frontend && echo "=== Package.json scripts ===" && cat package.json | grep -A 5 '"scripts"'
 
-# Build frontend
-RUN cd frontend && npm run build
+# Show npm run-script output
+RUN cd frontend && npm run-script
+
+# Build frontend with explicit command
+RUN cd frontend && echo "Running build command..." && npm run build
 
 # Production stage
 FROM node:18-alpine AS production
