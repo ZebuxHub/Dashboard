@@ -10,9 +10,9 @@ COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
 
 # Install dependencies
-RUN npm install
-RUN cd backend && npm install
-RUN cd frontend && npm install
+RUN npm install --legacy-peer-deps
+RUN cd backend && npm install --legacy-peer-deps
+RUN cd frontend && npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
@@ -35,7 +35,7 @@ RUN adduser -S zebux -u 1001
 
 # Copy backend package files and install production dependencies
 COPY backend/package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Copy backend source
 COPY backend/ ./
