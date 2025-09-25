@@ -73,7 +73,9 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve static files from frontend build
-app.use(express.static(path.join(__dirname, './frontend/dist')));
+const staticPath = path.join(__dirname, './frontend/dist');
+console.log('📁 Static files path:', staticPath);
+app.use(express.static(staticPath));
 
 // API Routes
 app.use('/api/sync', syncRoutes);
@@ -115,7 +117,25 @@ app.set('io', io);
 
 // Serve React app for all non-API routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, './frontend/dist/index.html'));
+  const indexPath = path.join(__dirname, './frontend/dist/index.html');
+  console.log('📄 Serving index.html from:', indexPath);
+  
+  // Check if file exists
+  const fs = require('fs');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    console.error('❌ index.html not found at:', indexPath);
+    res.status(404).send(`
+      <html>
+        <body>
+          <h1>Frontend Not Found</h1>
+          <p>Static files not available at: ${indexPath}</p>
+          <p>Please check the build process.</p>
+        </body>
+      </html>
+    `);
+  }
 });
 
 // Error handling middleware
@@ -140,9 +160,36 @@ const PORT = process.env.PORT || 3000;
 
 async function startServer() {
   try {
+    console.log('🔄 Starting server initialization...');
+    
+    // Check if frontend files exist
+    const fs = require('fs');
+    const frontendPath = path.join(__dirname, './frontend/dist');
+    const indexPath = path.join(frontendPath, 'index.html');
+    
+    console.log('📁 Checking frontend files...');
+    console.log('Frontend path:', frontendPath);
+    console.log('Index path:', indexPath);
+    
+    if (!fs.existsSync(frontendPath)) {
+      console.warn('⚠️ Frontend dist folder not found, creating fallback...');
+      fs.mkdirSync(frontendPath, { recursive: true });
+      fs.writeFileSync(indexPath, `
+        <!DOCTYPE html>
+        <html>
+          <head><title>Zebux Dashboard</title></head>
+          <body>
+            <h1>🚧 Frontend Building...</h1>
+            <p>The frontend is being built. Please wait...</p>
+          </body>
+        </html>
+      `);
+    }
+
     // Initialize database
+    console.log('🗄️ Initializing database...');
     await database.init();
-    console.log('Database initialized successfully');
+    console.log('✅ Database initialized successfully');
 
     // Start server
     server.listen(PORT, '0.0.0.0', () => {
@@ -151,11 +198,19 @@ async function startServer() {
       console.log(`🔧 Admin Panel: http://localhost:${PORT}/admin`);
       console.log(`📡 API: http://localhost:${PORT}/api`);
       console.log(`🎮 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log('✅ Server started successfully!');
     });
 
   } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+    console.error('❌ Failed to start server:', error);
+    console.error('Stack trace:', error.stack);
+    
+    // Don't exit immediately, try to continue with basic functionality
+    console.log('🔄 Attempting to start with minimal functionality...');
+    
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`⚠️ Server running in fallback mode on port ${PORT}`);
+    });
   }
 }
 
