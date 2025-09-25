@@ -41,7 +41,7 @@ RUN npm install --only=production && npm cache clean --force
 COPY backend/ ./
 
 # Copy built frontend
-COPY --from=builder /app/frontend/dist ./public
+COPY --from=builder /app/frontend/dist ./frontend/dist
 
 # Create data directory for SQLite
 RUN mkdir -p data && chown -R zebux:nodejs data
