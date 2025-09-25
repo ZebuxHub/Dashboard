@@ -9,133 +9,111 @@ class Database {
   }
 
   async init() {
-    return new Promise((resolve, reject) => {
+    try {
       // Ensure data directory exists
       const dataDir = path.dirname(this.dbPath);
       if (!fs.existsSync(dataDir)) {
         fs.mkdirSync(dataDir, { recursive: true });
       }
 
-      // Connect to database
+      // Initialize SQLite database
       this.db = new sqlite3.Database(this.dbPath, (err) => {
         if (err) {
-          console.error('Error opening database:', err);
-          reject(err);
-          return;
+          console.error('❌ Database connection failed:', err.message);
+          throw err;
         }
-        console.log('Connected to SQLite database');
-        this.createTables().then(resolve).catch(reject);
+        console.log('✅ Connected to SQLite database');
       });
-    });
+
+      // Create tables
+      await this.createTables();
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Database initialization failed:', error);
+      throw error;
+    }
   }
 
   async createTables() {
     return new Promise((resolve, reject) => {
-      const tables = [
-        // Users/Tokens table
-        `CREATE TABLE IF NOT EXISTS tokens (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          token TEXT UNIQUE NOT NULL,
-          user_id TEXT,
-          hwid TEXT,
-          ip_address TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          last_used DATETIME DEFAULT CURRENT_TIMESTAMP,
-          is_banned BOOLEAN DEFAULT FALSE,
-          metadata TEXT
-        )`,
-
-        // Players table
-        `CREATE TABLE IF NOT EXISTS players (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          token_id INTEGER,
-          roblox_user_id INTEGER UNIQUE,
-          username TEXT NOT NULL,
-          display_name TEXT,
-          account_name TEXT,
-          account_age INTEGER,
-          game_id INTEGER,
-          game_name TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (token_id) REFERENCES tokens (id)
-        )`,
-
-        // Game data snapshots
-        `CREATE TABLE IF NOT EXISTS game_data (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          player_id INTEGER,
-          coins REAL DEFAULT 0,
-          fruits TEXT, -- JSON
-          eggs TEXT,   -- JSON
-          pets TEXT,   -- JSON
-          mutations TEXT, -- JSON
-          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-          session_duration INTEGER DEFAULT 0,
-          FOREIGN KEY (player_id) REFERENCES players (id)
-        )`,
-
-        // Admin users
-        `CREATE TABLE IF NOT EXISTS admin_users (
+      const queries = [
+        // Users table
+        `CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           username TEXT UNIQUE NOT NULL,
-          password_hash TEXT NOT NULL,
+          display_name TEXT,
+          user_id INTEGER UNIQUE,
+          token TEXT UNIQUE NOT NULL,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          last_login DATETIME
+          last_sync DATETIME,
+          is_active BOOLEAN DEFAULT 1,
+          is_banned BOOLEAN DEFAULT 0,
+          ban_reason TEXT,
+          ip_address TEXT,
+          hwid TEXT,
+          total_syncs INTEGER DEFAULT 0
         )`,
-
-        // System settings
+        
+        // Player data table
+        `CREATE TABLE IF NOT EXISTS player_data (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          coins INTEGER DEFAULT 0,
+          gems INTEGER DEFAULT 0,
+          pets INTEGER DEFAULT 0,
+          eggs INTEGER DEFAULT 0,
+          mutations INTEGER DEFAULT 0,
+          raw_data TEXT,
+          FOREIGN KEY (user_id) REFERENCES users (id)
+        )`,
+        
+        // Sync logs table
+        `CREATE TABLE IF NOT EXISTS sync_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          status TEXT NOT NULL,
+          ip_address TEXT,
+          user_agent TEXT,
+          error_message TEXT,
+          FOREIGN KEY (user_id) REFERENCES users (id)
+        )`,
+        
+        // Admin logs table
+        `CREATE TABLE IF NOT EXISTS admin_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          admin_username TEXT NOT NULL,
+          action TEXT NOT NULL,
+          target_user_id INTEGER,
+          details TEXT,
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          ip_address TEXT
+        )`,
+        
+        // Settings table
         `CREATE TABLE IF NOT EXISTS settings (
           key TEXT PRIMARY KEY,
-          value TEXT,
+          value TEXT NOT NULL,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`
       ];
 
       let completed = 0;
-      const total = tables.length;
+      const total = queries.length;
 
-      tables.forEach((sql) => {
-        this.db.run(sql, (err) => {
+      queries.forEach((query, index) => {
+        this.db.run(query, (err) => {
           if (err) {
-            console.error('Error creating table:', err);
+            console.error(`❌ Failed to create table ${index + 1}:`, err.message);
             reject(err);
             return;
           }
+          
           completed++;
           if (completed === total) {
-            console.log('All database tables created successfully');
-            this.createIndexes().then(resolve).catch(reject);
-          }
-        });
-      });
-    });
-  }
-
-  async createIndexes() {
-    return new Promise((resolve, reject) => {
-      const indexes = [
-        'CREATE INDEX IF NOT EXISTS idx_tokens_token ON tokens(token)',
-        'CREATE INDEX IF NOT EXISTS idx_tokens_hwid ON tokens(hwid)',
-        'CREATE INDEX IF NOT EXISTS idx_players_roblox_id ON players(roblox_user_id)',
-        'CREATE INDEX IF NOT EXISTS idx_players_token ON players(token_id)',
-        'CREATE INDEX IF NOT EXISTS idx_game_data_player ON game_data(player_id)',
-        'CREATE INDEX IF NOT EXISTS idx_game_data_timestamp ON game_data(timestamp)'
-      ];
-
-      let completed = 0;
-      const total = indexes.length;
-
-      indexes.forEach((sql) => {
-        this.db.run(sql, (err) => {
-          if (err) {
-            console.error('Error creating index:', err);
-            reject(err);
-            return;
-          }
-          completed++;
-          if (completed === total) {
-            console.log('All database indexes created successfully');
+            console.log('✅ All database tables created successfully');
             resolve();
           }
         });
@@ -143,287 +121,152 @@ class Database {
     });
   }
 
-  // Token operations
-  async createToken(tokenData) {
+  // User operations
+  async createUser(userData) {
     return new Promise((resolve, reject) => {
-      const { token, hwid, ip_address, metadata } = tokenData;
-      const sql = `INSERT INTO tokens (token, hwid, ip_address, metadata) VALUES (?, ?, ?, ?)`;
+      const { username, displayName, userId, token, ipAddress, hwid } = userData;
       
-      this.db.run(sql, [token, hwid, ip_address, JSON.stringify(metadata || {})], function(err) {
+      const query = `
+        INSERT INTO users (username, display_name, user_id, token, ip_address, hwid)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+      
+      this.db.run(query, [username, displayName, userId, token, ipAddress, hwid], function(err) {
         if (err) {
           reject(err);
-          return;
-        }
-        resolve({ id: this.lastID, token });
-      });
-    });
-  }
-
-  async getToken(token) {
-    return new Promise((resolve, reject) => {
-      const sql = `SELECT * FROM tokens WHERE token = ? AND is_banned = FALSE`;
-      
-      this.db.get(sql, [token], (err, row) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        if (row && row.metadata) {
-          try {
-            row.metadata = JSON.parse(row.metadata);
-          } catch (e) {
-            row.metadata = {};
-          }
-        }
-        resolve(row);
-      });
-    });
-  }
-
-  async updateTokenUsage(token, hwid, ip_address) {
-    return new Promise((resolve, reject) => {
-      const sql = `UPDATE tokens SET hwid = ?, ip_address = ?, last_used = CURRENT_TIMESTAMP WHERE token = ?`;
-      
-      this.db.run(sql, [hwid, ip_address, token], function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(this.changes > 0);
-      });
-    });
-  }
-
-  async banToken(token, banned = true) {
-    return new Promise((resolve, reject) => {
-      const sql = `UPDATE tokens SET is_banned = ? WHERE token = ?`;
-      
-      this.db.run(sql, [banned, token], function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(this.changes > 0);
-      });
-    });
-  }
-
-  // Player operations
-  async createOrUpdatePlayer(playerData) {
-    return new Promise((resolve, reject) => {
-      const { token_id, roblox_user_id, username, display_name, account_name, account_age, game_id, game_name } = playerData;
-      
-      // First try to update existing player
-      const updateSql = `UPDATE players SET 
-        username = ?, display_name = ?, account_name = ?, account_age = ?, 
-        game_id = ?, game_name = ?, updated_at = CURRENT_TIMESTAMP 
-        WHERE roblox_user_id = ?`;
-      
-      this.db.run(updateSql, [username, display_name, account_name, account_age, game_id, game_name, roblox_user_id], function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        
-        if (this.changes > 0) {
-          // Player updated
-          resolve({ id: null, updated: true });
         } else {
-          // Player doesn't exist, create new one
-          const insertSql = `INSERT INTO players 
-            (token_id, roblox_user_id, username, display_name, account_name, account_age, game_id, game_name) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-          
-          this.db.run(insertSql, [token_id, roblox_user_id, username, display_name, account_name, account_age, game_id, game_name], function(err) {
-            if (err) {
-              reject(err);
-              return;
-            }
-            resolve({ id: this.lastID, updated: false });
-          });
+          resolve({ id: this.lastID, ...userData });
         }
       });
     });
   }
 
-  async getPlayersByToken(token_id) {
+  async getUserByToken(token) {
     return new Promise((resolve, reject) => {
-      const sql = `SELECT * FROM players WHERE token_id = ? ORDER BY updated_at DESC`;
+      const query = 'SELECT * FROM users WHERE token = ? AND is_active = 1 AND is_banned = 0';
       
-      this.db.all(sql, [token_id], (err, rows) => {
+      this.db.get(query, [token], (err, row) => {
         if (err) {
           reject(err);
-          return;
+        } else {
+          resolve(row);
         }
-        resolve(rows || []);
       });
     });
   }
 
-  async getPlayer(roblox_user_id) {
+  async updateUserSync(userId) {
     return new Promise((resolve, reject) => {
-      const sql = `SELECT * FROM players WHERE roblox_user_id = ?`;
+      const query = `
+        UPDATE users 
+        SET last_sync = CURRENT_TIMESTAMP, total_syncs = total_syncs + 1
+        WHERE id = ?
+      `;
       
-      this.db.get(sql, [roblox_user_id], (err, row) => {
+      this.db.run(query, [userId], function(err) {
         if (err) {
           reject(err);
-          return;
+        } else {
+          resolve(this.changes);
         }
-        resolve(row);
       });
     });
   }
 
-  // Game data operations
-  async saveGameData(gameData) {
+  // Player data operations
+  async savePlayerData(userId, gameData) {
     return new Promise((resolve, reject) => {
-      const { player_id, coins, fruits, eggs, pets, mutations, session_duration } = gameData;
-      const sql = `INSERT INTO game_data 
-        (player_id, coins, fruits, eggs, pets, mutations, session_duration) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)`;
+      const { coins, gems, pets, eggs, mutations } = gameData;
       
-      this.db.run(sql, [
-        player_id, 
-        coins, 
-        JSON.stringify(fruits || {}), 
-        JSON.stringify(eggs || {}), 
-        JSON.stringify(pets || {}), 
-        JSON.stringify(mutations || {}), 
-        session_duration || 0
+      const query = `
+        INSERT INTO player_data (user_id, coins, gems, pets, eggs, mutations, raw_data)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+      
+      this.db.run(query, [
+        userId, coins || 0, gems || 0, pets || 0, eggs || 0, mutations || 0,
+        JSON.stringify(gameData)
       ], function(err) {
         if (err) {
           reject(err);
-          return;
+        } else {
+          resolve({ id: this.lastID });
         }
-        resolve({ id: this.lastID });
       });
     });
   }
 
-  async getLatestGameData(player_id) {
+  async getPlayerHistory(userId, limit = 24) {
     return new Promise((resolve, reject) => {
-      const sql = `SELECT * FROM game_data WHERE player_id = ? ORDER BY timestamp DESC LIMIT 1`;
+      const query = `
+        SELECT * FROM player_data 
+        WHERE user_id = ? 
+        ORDER BY timestamp DESC 
+        LIMIT ?
+      `;
       
-      this.db.get(sql, [player_id], (err, row) => {
+      this.db.all(query, [userId, limit], (err, rows) => {
         if (err) {
           reject(err);
-          return;
+        } else {
+          resolve(rows);
         }
-        if (row) {
-          // Parse JSON fields
-          try {
-            row.fruits = JSON.parse(row.fruits || '{}');
-            row.eggs = JSON.parse(row.eggs || '{}');
-            row.pets = JSON.parse(row.pets || '{}');
-            row.mutations = JSON.parse(row.mutations || '{}');
-          } catch (e) {
-            console.error('Error parsing game data JSON:', e);
-          }
-        }
-        resolve(row);
-      });
-    });
-  }
-
-  async getGameDataHistory(player_id, hours = 24) {
-    return new Promise((resolve, reject) => {
-      const sql = `SELECT * FROM game_data 
-        WHERE player_id = ? AND timestamp > datetime('now', '-${hours} hours') 
-        ORDER BY timestamp ASC`;
-      
-      this.db.all(sql, [player_id], (err, rows) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        
-        // Parse JSON fields for all rows
-        const parsedRows = (rows || []).map(row => {
-          try {
-            row.fruits = JSON.parse(row.fruits || '{}');
-            row.eggs = JSON.parse(row.eggs || '{}');
-            row.pets = JSON.parse(row.pets || '{}');
-            row.mutations = JSON.parse(row.mutations || '{}');
-          } catch (e) {
-            console.error('Error parsing game data JSON:', e);
-          }
-          return row;
-        });
-        
-        resolve(parsedRows);
       });
     });
   }
 
   // Admin operations
-  async createAdmin(username, passwordHash) {
+  async getAllUsers() {
     return new Promise((resolve, reject) => {
-      const sql = `INSERT INTO admin_users (username, password_hash) VALUES (?, ?)`;
+      const query = `
+        SELECT u.*, 
+               pd.coins, pd.gems, pd.pets, pd.eggs, pd.mutations,
+               pd.timestamp as last_data_update
+        FROM users u
+        LEFT JOIN player_data pd ON u.id = pd.user_id
+        WHERE pd.id = (
+          SELECT id FROM player_data pd2 
+          WHERE pd2.user_id = u.id 
+          ORDER BY timestamp DESC 
+          LIMIT 1
+        )
+        ORDER BY u.last_sync DESC
+      `;
       
-      this.db.run(sql, [username, passwordHash], function(err) {
+      this.db.all(query, [], (err, rows) => {
         if (err) {
           reject(err);
-          return;
+        } else {
+          resolve(rows);
         }
-        resolve({ id: this.lastID });
       });
     });
   }
 
-  async getAdmin(username) {
-    return new Promise((resolve, reject) => {
-      const sql = `SELECT * FROM admin_users WHERE username = ?`;
-      
-      this.db.get(sql, [username], (err, row) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(row);
-      });
-    });
-  }
-
-  async updateAdminLogin(username) {
-    return new Promise((resolve, reject) => {
-      const sql = `UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE username = ?`;
-      
-      this.db.run(sql, [username], function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(this.changes > 0);
-      });
-    });
-  }
-
-  // Statistics
   async getStats() {
     return new Promise((resolve, reject) => {
-      const queries = [
-        'SELECT COUNT(*) as total_tokens FROM tokens',
-        'SELECT COUNT(*) as active_tokens FROM tokens WHERE is_banned = FALSE',
-        'SELECT COUNT(*) as total_players FROM players',
-        'SELECT COUNT(*) as total_data_points FROM game_data',
-        'SELECT COUNT(*) as recent_syncs FROM game_data WHERE timestamp > datetime("now", "-1 hour")'
-      ];
+      const queries = {
+        totalUsers: 'SELECT COUNT(*) as count FROM users WHERE is_active = 1',
+        activeTokens: 'SELECT COUNT(*) as count FROM users WHERE is_active = 1 AND is_banned = 0',
+        totalSyncs: 'SELECT SUM(total_syncs) as total FROM users',
+        todaySyncs: `SELECT COUNT(*) as count FROM sync_logs WHERE date(timestamp) = date('now')`
+      };
 
       const stats = {};
       let completed = 0;
+      const total = Object.keys(queries).length;
 
-      queries.forEach((sql, index) => {
-        this.db.get(sql, (err, row) => {
+      Object.entries(queries).forEach(([key, query]) => {
+        this.db.get(query, [], (err, row) => {
           if (err) {
-            reject(err);
-            return;
+            console.error(`Stats query error for ${key}:`, err);
+            stats[key] = 0;
+          } else {
+            stats[key] = row.count || row.total || 0;
           }
           
-          const key = Object.keys(row)[0];
-          stats[key] = row[key];
-          
           completed++;
-          if (completed === queries.length) {
+          if (completed === total) {
             resolve(stats);
           }
         });
@@ -431,18 +274,38 @@ class Database {
     });
   }
 
-  // Close database connection
-  close() {
+  // Logging
+  async logSync(userId, status, ipAddress, userAgent, errorMessage = null) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        INSERT INTO sync_logs (user_id, status, ip_address, user_agent, error_message)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+      
+      this.db.run(query, [userId, status, ipAddress, userAgent, errorMessage], function(err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ id: this.lastID });
+        }
+      });
+    });
+  }
+
+  async close() {
     if (this.db) {
       this.db.close((err) => {
         if (err) {
-          console.error('Error closing database:', err);
+          console.error('❌ Error closing database:', err.message);
         } else {
-          console.log('Database connection closed');
+          console.log('✅ Database connection closed');
         }
       });
     }
   }
 }
 
-module.exports = new Database();
+// Create singleton instance
+const database = new Database();
+
+module.exports = database;
