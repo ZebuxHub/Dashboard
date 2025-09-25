@@ -4,28 +4,16 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Add cache buster
-RUN echo "Cache bust: $(date)" > /tmp/cache_bust
-
 # Copy source code
 COPY . .
-
-# Clear npm cache to avoid conflicts
-RUN npm cache clean --force
 
 # Install dependencies
 RUN npm install --legacy-peer-deps
 RUN cd backend && npm install --legacy-peer-deps
 RUN cd frontend && npm install --legacy-peer-deps
 
-# Verify package.json content (debug)
-RUN cd frontend && echo "=== Package.json scripts ===" && cat package.json | grep -A 5 '"scripts"'
-
-# Show npm run-script output
-RUN cd frontend && npm run-script
-
-# Build frontend with explicit command
-RUN cd frontend && echo "Running build command..." && npm run build
+# Build frontend
+RUN cd frontend && npm run build
 
 # Production stage
 FROM node:18-alpine AS production
