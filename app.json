@@ -35,12 +35,12 @@
     },
     "ADMIN_USERNAME": {
       "description": "Admin username for the admin panel",
-      "value": "user",
+      "value": "zimpyfile",
       "required": true
     },
     "ADMIN_PASSWORD": {
       "description": "Admin password for the admin panel",
-      "value": "password",
+      "value": "050042767",
       "required": true
     },
     "JWT_SECRET": {
