@@ -4,18 +4,22 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY backend/package*.json ./backend/
-COPY frontend/package*.json ./frontend/
+# Add cache buster
+RUN echo "Cache bust: $(date)" > /tmp/cache_bust
 
-# Copy source code first
+# Copy source code
 COPY . .
+
+# Clear npm cache to avoid conflicts
+RUN npm cache clean --force
 
 # Install dependencies
 RUN npm install --legacy-peer-deps
 RUN cd backend && npm install --legacy-peer-deps
 RUN cd frontend && npm install --legacy-peer-deps
+
+# Verify package.json content (debug)
+RUN cd frontend && echo "=== Package.json scripts ===" && cat package.json | grep -A 5 '"scripts"'
 
 # Build frontend
 RUN cd frontend && npm run build
