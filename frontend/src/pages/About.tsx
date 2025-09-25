@@ -1,116 +1,221 @@
-import React from 'react';
+import { 
+  SparklesIcon, 
+  ShieldCheckIcon, 
+  ChartBarIcon, 
+  DevicePhoneMobileIcon,
+  ClockIcon,
+  GlobeAltIcon
+} from '@heroicons/react/24/outline';
 
-export default function About() {
+const About = () => {
+  const features = [
+    {
+      name: 'Real-time Sync',
+      description: 'Automatic data synchronization every 5 minutes with your game progress.',
+      icon: ClockIcon,
+      color: 'text-blue-400'
+    },
+    {
+      name: 'Secure & Private',
+      description: 'Your data is encrypted and secure. Only you can access your information.',
+      icon: ShieldCheckIcon,
+      color: 'text-green-400'
+    },
+    {
+      name: 'Beautiful Analytics',
+      description: 'Track your progress with stunning charts and detailed statistics.',
+      icon: ChartBarIcon,
+      color: 'text-purple-400'
+    },
+    {
+      name: 'Mobile Friendly',
+      description: 'Access your dashboard from any device, anywhere, anytime.',
+      icon: DevicePhoneMobileIcon,
+      color: 'text-pink-400'
+    },
+    {
+      name: 'Multi-Game Support',
+      description: 'Designed to work with multiple games and expand over time.',
+      icon: GlobeAltIcon,
+      color: 'text-yellow-400'
+    },
+    {
+      name: 'Advanced Features',
+      description: 'Historical data, notifications, and much more coming soon.',
+      icon: SparklesIcon,
+      color: 'text-indigo-400'
+    }
+  ];
+
+  const stats = [
+    { name: 'Active Users', value: '1,200+' },
+    { name: 'Data Points Tracked', value: '50M+' },
+    { name: 'Uptime', value: '99.9%' },
+    { name: 'Games Supported', value: '5+' }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-900 via-primary-900 to-dark-900 p-4">
-      <div className="container mx-auto max-w-4xl">
-        <div className="glass-card rounded-3xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white mb-4">
-              🎮 About Zebux Dashboard
-            </h1>
-            <p className="text-xl text-gray-300">
-              Universal Game Data Tracker with Real-time Sync
-            </p>
+    <div className="space-y-12">
+      {/* Hero Section */}
+      <div className="text-center">
+        <div className="mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-6">
+          <SparklesIcon className="h-10 w-10 text-white" />
+        </div>
+        <h1 className="text-4xl font-bold text-white mb-4">
+          Zebux Dashboard
+        </h1>
+        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+          The ultimate game data tracking platform. Monitor your progress, analyze your performance, 
+          and stay connected with your gaming achievements in real-time.
+        </p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
+          <div key={index} className="glass-card p-6 rounded-xl border border-white/10 text-center">
+            <p className="text-3xl font-bold text-white">{stat.value}</p>
+            <p className="text-sm text-gray-400 mt-1">{stat.name}</p>
           </div>
+        ))}
+      </div>
 
-          <div className="space-y-8">
-            <section>
-              <h2 className="text-2xl font-bold text-white mb-4">
-                ✨ Features
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="glass-card rounded-xl p-4">
-                  <h3 className="font-semibold text-white mb-2">📊 Real-time Data</h3>
-                  <p className="text-gray-300 text-sm">Live updates from your Lua scripts</p>
-                </div>
-                <div className="glass-card rounded-xl p-4">
-                  <h3 className="font-semibold text-white mb-2">📈 Historical Charts</h3>
-                  <p className="text-gray-300 text-sm">Track progress over time</p>
-                </div>
-                <div className="glass-card rounded-xl p-4">
-                  <h3 className="font-semibold text-white mb-2">🔄 Multi-Account</h3>
-                  <p className="text-gray-300 text-sm">Manage multiple game accounts</p>
-                </div>
-                <div className="glass-card rounded-xl p-4">
-                  <h3 className="font-semibold text-white mb-2">📱 Mobile Ready</h3>
-                  <p className="text-gray-300 text-sm">Works on all devices</p>
-                </div>
-              </div>
-            </section>
+      {/* Features Grid */}
+      <div>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-white mb-4">Why Choose Zebux?</h2>
+          <p className="text-gray-400 max-w-2xl mx-auto">
+            Built with modern technology and designed for gamers who want to track their progress 
+            and achievements across multiple games.
+          </p>
+        </div>
 
-            <section>
-              <h2 className="text-2xl font-bold text-white mb-4">
-                🎯 How It Works
-              </h2>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white font-bold">
-                    1
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <div key={index} className="glass-card p-6 rounded-xl border border-white/10">
+                <div className="flex items-center mb-4">
+                  <div className="p-2 rounded-lg bg-white/10">
+                    <Icon className={`h-6 w-6 ${feature.color}`} />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-white">Generate Token</h3>
-                    <p className="text-gray-300">Create a secure API token for your account</p>
-                  </div>
+                  <h3 className="text-lg font-semibold text-white ml-3">{feature.name}</h3>
                 </div>
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white font-bold">
-                    2
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">Add to Script</h3>
-                    <p className="text-gray-300">Integrate our Lua module into your Roblox script</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white font-bold">
-                    3
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">Watch Data Sync</h3>
-                    <p className="text-gray-300">Your game data automatically syncs to the dashboard</p>
-                  </div>
-                </div>
+                <p className="text-gray-400">{feature.description}</p>
               </div>
-            </section>
+            );
+          })}
+        </div>
+      </div>
 
-            <section>
-              <h2 className="text-2xl font-bold text-white mb-4">
-                🔒 Security & Privacy
-              </h2>
-              <div className="glass-card rounded-xl p-6">
-                <ul className="space-y-2 text-gray-300">
-                  <li>• 🔐 Secure token-based authentication</li>
-                  <li>• 🖥️ HWID/IP locking for device security</li>
-                  <li>• 🚫 No personal data collection</li>
-                  <li>• 🔄 Data encrypted in transit</li>
-                  <li>• 👨‍💼 Admin controls for user management</li>
-                </ul>
-              </div>
-            </section>
+      {/* How It Works */}
+      <div>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-white mb-4">How It Works</h2>
+          <p className="text-gray-400 max-w-2xl mx-auto">
+            Get started in just a few simple steps and begin tracking your game data immediately.
+          </p>
+        </div>
 
-            <section className="text-center">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                🚀 Ready to Get Started?
-              </h2>
-              <div className="space-x-4">
-                <a
-                  href="/token"
-                  className="glass-button-enhanced px-6 py-3 rounded-xl text-white font-medium inline-block"
-                >
-                  🎫 Generate Token
-                </a>
-                <a
-                  href="/"
-                  className="glass-button-enhanced px-6 py-3 rounded-xl text-white font-medium inline-block"
-                >
-                  📊 Dashboard
-                </a>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            {
+              step: '01',
+              title: 'Generate Token',
+              description: 'Create a secure API token with your Roblox username to identify your data.'
+            },
+            {
+              step: '02',
+              title: 'Run Script',
+              description: 'Execute our Lua script in your game executor to start syncing your data.'
+            },
+            {
+              step: '03',
+              title: 'Track Progress',
+              description: 'Monitor your real-time progress on the beautiful dashboard interface.'
+            }
+          ].map((step, index) => (
+            <div key={index} className="text-center">
+              <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-4">
+                <span className="text-white font-bold text-lg">{step.step}</span>
               </div>
-            </section>
+              <h3 className="text-xl font-semibold text-white mb-2">{step.title}</h3>
+              <p className="text-gray-400">{step.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Technology Stack */}
+      <div className="glass-card p-8 rounded-xl border border-white/10">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-white mb-4">Built with Modern Technology</h2>
+          <p className="text-gray-400">
+            Zebux Dashboard is built using cutting-edge technologies to ensure the best performance and user experience.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {[
+            { name: 'React', desc: 'Frontend Framework' },
+            { name: 'TypeScript', desc: 'Type Safety' },
+            { name: 'Node.js', desc: 'Backend Runtime' },
+            { name: 'SQLite', desc: 'Database' },
+            { name: 'Socket.IO', desc: 'Real-time Updates' },
+            { name: 'Tailwind CSS', desc: 'Styling' },
+            { name: 'Railway', desc: 'Deployment' },
+            { name: 'Lua', desc: 'Game Integration' }
+          ].map((tech, index) => (
+            <div key={index} className="text-center p-4 rounded-lg hover:bg-white/5 transition-colors">
+              <h4 className="font-semibold text-white">{tech.name}</h4>
+              <p className="text-sm text-gray-400 mt-1">{tech.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Contact & Support */}
+      <div className="glass-card p-8 rounded-xl border border-white/10">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">Need Help?</h2>
+          <p className="text-gray-400 mb-6">
+            Our team is here to help you get the most out of Zebux Dashboard.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <h3 className="font-semibold text-white mb-2">Documentation</h3>
+              <p className="text-sm text-gray-400">
+                Comprehensive guides and API documentation
+              </p>
+            </div>
+            <div className="text-center">
+              <h3 className="font-semibold text-white mb-2">Community</h3>
+              <p className="text-sm text-gray-400">
+                Join our Discord server for support and updates
+              </p>
+            </div>
+            <div className="text-center">
+              <h3 className="font-semibold text-white mb-2">Updates</h3>
+              <p className="text-sm text-gray-400">
+                Regular updates with new features and improvements
+              </p>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <div className="text-center py-8 border-t border-white/10">
+        <p className="text-gray-400">
+          © 2025 Zebux Dashboard. Built with ❤️ for the gaming community.
+        </p>
+        <p className="text-sm text-gray-500 mt-2">
+          Version 1.0.0 • Last updated: {new Date().toLocaleDateString()}
+        </p>
+      </div>
     </div>
   );
-}
+};
+
+export default About;
