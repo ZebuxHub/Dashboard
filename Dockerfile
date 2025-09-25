@@ -9,13 +9,13 @@ COPY package*.json ./
 COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
 
+# Copy source code first
+COPY . .
+
 # Install dependencies
 RUN npm install --legacy-peer-deps
 RUN cd backend && npm install --legacy-peer-deps
 RUN cd frontend && npm install --legacy-peer-deps
-
-# Copy source code
-COPY . .
 
 # Build frontend
 RUN cd frontend && npm run build
