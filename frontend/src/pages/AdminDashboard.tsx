@@ -6,7 +6,7 @@ import {
   ChartBarIcon, 
   ExclamationTriangleIcon,
   TrashIcon,
-  BanIcon,
+  NoSymbolIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import { useApi } from '../contexts/ApiContext';
@@ -284,7 +284,7 @@ const AdminDashboard = () => {
                     >
                       {user.isActive ? (
                         <>
-                          <BanIcon className="h-3 w-3 mr-1" />
+                          <NoSymbolIcon className="h-3 w-3 mr-1" />
                           Ban
                         </>
                       ) : (
