@@ -90,7 +90,11 @@ router.post('/', validateToken, async (req, res) => {
       inventory: inventory ? {
         pets: inventory.pets?.counts || {},
         eggs: inventory.eggs || {},
-        mutations: inventory.mutations || {}
+        mutations: inventory.mutations || {},
+        petSpeeds: inventory.pets?.speeds || {},
+        totalPets: inventory.totalPets || 0,
+        totalEggs: inventory.totalEggs || 0,
+        placedPets: inventory.placedPets || 0
       } : null
     });
     
