@@ -20,19 +20,37 @@ const validateToken = (req, res, next) => {
 // Sync endpoint - receive data from Lua script
 router.post('/', validateToken, async (req, res) => {
   try {
-    const { username, displayName, userId, timestamp, gameData } = req.body;
+    const { player, inventory, gameData, timestamp } = req.body;
+    
+    // Extract player info from new format
+    const username = player?.username || player?.displayName;
+    const userId = player?.userId;
+    const displayName = player?.displayName;
     
     if (!username || !userId) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
+    
+    // Use gameData if available, otherwise extract from inventory
+    const finalGameData = gameData || {
+      pets: inventory?.totalPets || 0,
+      eggs: inventory?.totalEggs || 0,
+      coins: inventory?.coins || 0,
+      gems: inventory?.gems || 0
+    };
     
     // Here you would save to database
     // For now, just log and broadcast via WebSocket
     console.log('📊 Received sync data:', {
       username,
       userId,
-      timestamp: new Date(timestamp * 1000).toISOString(),
-      gameData
+      timestamp: new Date((timestamp || Date.now() / 1000) * 1000).toISOString(),
+      gameData: finalGameData,
+      inventory: inventory ? {
+        pets: inventory.pets?.counts || {},
+        eggs: inventory.eggs || {},
+        mutations: inventory.mutations || {}
+      } : null
     });
     
     // Broadcast to connected clients via WebSocket
@@ -44,7 +62,8 @@ router.post('/', validateToken, async (req, res) => {
         displayName,
         userId,
         timestamp,
-        gameData,
+        gameData: finalGameData,
+        inventory,
         lastUpdate: new Date().toISOString()
       });
     }
