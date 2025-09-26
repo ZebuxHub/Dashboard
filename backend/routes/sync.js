@@ -63,8 +63,25 @@ router.post('/', validateToken, async (req, res) => {
       gems: inventory?.gems || 0
     };
     
-    // Here you would save to database
-    // For now, just log and broadcast via WebSocket
+    // Prepare player data for storage
+    const playerData = {
+      username,
+      displayName,
+      userId,
+      token: req.token,
+      gameData: finalGameData,
+      inventory,
+      timestamp,
+      isOnline: true
+    };
+    
+    // Save to players data store
+    const playersRouter = require('./players');
+    if (playersRouter.updatePlayer) {
+      playersRouter.updatePlayer(playerData);
+    }
+    
+    // Log successful sync
     console.log('📊 Received sync data:', {
       username,
       userId,
@@ -81,13 +98,7 @@ router.post('/', validateToken, async (req, res) => {
     const io = req.app.get('io');
     if (io) {
       io.emit('playerUpdate', {
-        token: req.token,
-        username,
-        displayName,
-        userId,
-        timestamp,
-        gameData: finalGameData,
-        inventory,
+        ...playerData,
         lastUpdate: new Date().toISOString()
       });
     }
