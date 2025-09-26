@@ -344,7 +344,9 @@ function WebsiteSync.Start()
     end
     
     if not config.token then
-        log("Cannot start: No token configured")
+        log("❌ No token set! Please configure your token first.")
+        log("📝 Use: WebsiteSync.SetToken('your_token_here')")
+        log("🎫 Get token from: https://zebux.up.railway.app/token")
         return false
     end
     
