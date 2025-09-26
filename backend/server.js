@@ -129,8 +129,13 @@ io.on('connection', (socket) => {
 // Make io available to routes
 app.set('io', io);
 
-// Serve React app for all non-API routes
+// Serve React app for all non-API routes (must be last!)
 app.get('*', (req, res) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
   const indexPath = path.join(__dirname, './frontend/dist/index.html');
   console.log('📄 Serving index.html from:', indexPath);
   
