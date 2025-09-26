@@ -188,7 +188,6 @@ local function getInventoryData()
             for _, pet in ipairs(petsFolder:GetChildren()) do
                 if pet:IsA("Configuration") then
                     local petType = pet:GetAttribute("T") or pet.Name
-                    local speed = pet:GetAttribute("S") or 0
                     local mutation = pet:GetAttribute("M") or "None"
                     local dAttr = pet:GetAttribute("D") -- Placement attribute
                     
@@ -203,6 +202,30 @@ local function getInventoryData()
                         
                         -- Count pets by type
                         petCounts[petType] = (petCounts[petType] or 0) + 1
+                        
+                        -- Get pet speed from ScreenStorage UI (like AutoPlaceSystem)
+                        local speed = 0
+                        pcall(function()
+                            local pg = LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui")
+                            local screenStorage = pg and pg:FindFirstChild("ScreenStorage")
+                            local frame = screenStorage and screenStorage:FindFirstChild("Frame")
+                            local contentPet = frame and frame:FindFirstChild("ContentPet")
+                            local scrolling = contentPet and contentPet:FindFirstChild("ScrollingFrame")
+                            local node = scrolling and scrolling:FindFirstChild(pet.Name)
+                            local btn = node and node:FindFirstChild("BTN")
+                            local stat = btn and btn:FindFirstChild("Stat")
+                            local price = stat and stat:FindFirstChild("Price")
+                            local valueLabel = price and price:FindFirstChild("Value")
+                            local txt = nil
+                            if valueLabel and valueLabel:IsA("TextLabel") then
+                                txt = valueLabel.Text
+                            elseif price and price:IsA("TextLabel") then
+                                txt = price.Text
+                            end
+                            if txt then
+                                speed = tonumber((txt:gsub("[^%d]", ""))) or 0
+                            end
+                        end)
                         
                         -- Track speeds
                         if not petSpeeds[petType] then
