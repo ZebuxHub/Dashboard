@@ -52,30 +52,30 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting - More generous limits for development
+// Rate limiting - Very generous limits for development
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5000, // limit each IP to 5000 requests per windowMs (increased)
+  max: 10000, // limit each IP to 10000 requests per windowMs (very generous)
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 app.use('/api/', limiter);
 
-// More generous rate limiting for sync endpoint
+// Very generous rate limiting for sync endpoint
 const syncLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100, // limit each IP to 100 sync requests per minute (increased from 10)
+  max: 1000, // limit each IP to 1000 sync requests per minute (very generous)
   message: 'Too many sync requests, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use('/api/sync', syncLimiter);
 
-// Separate rate limit for token generation (more generous)
+// Very generous rate limiting for token generation
 const tokenLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 50, // 50 token generations per 5 minutes
+  max: 500, // 500 token generations per 5 minutes (very generous)
   message: 'Too many token generation attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
