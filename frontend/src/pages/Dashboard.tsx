@@ -136,57 +136,52 @@ const Dashboard = () => {
     return `${diffDays}d ago`;
   };
 
-  const StatCard = ({ title, value, icon: Icon, color, change }: {
+  const StatCard = ({ title, value, icon: Icon, color }: {
     title: string;
     value: string | number;
     icon: any;
     color: string;
-    change?: string;
   }) => (
-    <div className="glass-card p-6 rounded-xl border border-white/10">
+    <div className="glass-card p-6 rounded-xl border border-white/10 hover:border-white/20 transition-all duration-300 group">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-400">{title}</p>
-          <p className="text-2xl font-bold text-white mt-1">{value}</p>
-          {change && (
-            <p className="text-sm text-green-400 mt-1">
-              +{change} from last hour
-            </p>
-          )}
+        <div className="flex-1">
+          <p className="text-sm font-medium text-gray-400 mb-1">{title}</p>
+          <p className="text-3xl font-bold text-white group-hover:text-purple-300 transition-colors">
+            {value}
+          </p>
         </div>
-        <div className={`p-3 rounded-lg ${color}`}>
-          <Icon className="h-6 w-6 text-white" />
+        <div className={`p-3 rounded-xl ${color} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+          <Icon className="h-7 w-7 text-white" />
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white">Dashboard</h1>
           <p className="text-gray-400 mt-1">
             Real-time game data tracking and analytics
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 glass-card px-4 py-2 rounded-lg border border-white/10">
           <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-          <span className="text-sm text-gray-300">
+          <span className="text-sm text-gray-300 font-medium">
             {isConnected ? 'Connected' : 'Disconnected'}
           </span>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <StatCard
           title="Total Players"
           value={stats.totalPlayers}
           icon={UserIcon}
           color="bg-gradient-to-br from-blue-500 to-blue-600"
-          change="3"
         />
         <StatCard
           title="Online Now"
@@ -199,7 +194,6 @@ const Dashboard = () => {
           value={formatNumber(stats.totalSyncs)}
           icon={ChartBarIcon}
           color="bg-gradient-to-br from-purple-500 to-purple-600"
-          change="127"
         />
         <StatCard
           title="Avg Coins"
@@ -211,31 +205,41 @@ const Dashboard = () => {
 
       {/* No Data State */}
       {players.length === 0 && (
-        <div className="glass-card p-12 rounded-xl border border-white/10 text-center">
-          <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-6">
-            <span className="text-white text-2xl">🎮</span>
+        <div className="glass-card p-8 lg:p-12 rounded-xl border border-white/10 text-center">
+          <div className="mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg">
+            <span className="text-white text-3xl">🎮</span>
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">No Data Yet</h3>
-          <p className="text-gray-400 mb-6">
-            No players have synced their data yet. Get started by:
+          <h3 className="text-2xl font-bold text-white mb-3">No Data Yet</h3>
+          <p className="text-gray-400 mb-8 max-w-lg mx-auto">
+            No players have synced their data yet. Get started by following these simple steps:
           </p>
-          <div className="space-y-3 text-left max-w-md mx-auto">
-            <div className="flex items-center space-x-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">1</span>
-              <span className="text-gray-300">Generate a token in the Token Generator</span>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-8">
+            <div className="glass-card p-6 rounded-lg border border-white/10">
+              <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold mx-auto mb-4">1</div>
+              <h4 className="text-white font-semibold mb-2">Generate Token</h4>
+              <p className="text-gray-400 text-sm">Create your unique API token</p>
             </div>
-            <div className="flex items-center space-x-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">2</span>
-              <span className="text-gray-300">Run the Lua script in Roblox</span>
+            
+            <div className="glass-card p-6 rounded-lg border border-white/10">
+              <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold mx-auto mb-4">2</div>
+              <h4 className="text-white font-semibold mb-2">Run Script</h4>
+              <p className="text-gray-400 text-sm">Execute Lua script in Roblox</p>
             </div>
-            <div className="flex items-center space-x-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">3</span>
-              <span className="text-gray-300">Wait for data to sync automatically</span>
+            
+            <div className="glass-card p-6 rounded-lg border border-white/10">
+              <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold mx-auto mb-4">3</div>
+              <h4 className="text-white font-semibold mb-2">Watch Data</h4>
+              <p className="text-gray-400 text-sm">Monitor real-time progress</p>
             </div>
           </div>
-          <div className="mt-6">
-            <a href="/token" className="glass-button-enhanced inline-block px-6 py-2 rounded-lg">
-              Generate Token
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/token" className="glass-button-enhanced inline-block px-8 py-3 rounded-lg font-medium">
+              🎫 Generate Token
+            </a>
+            <a href="/about" className="glass-card inline-block px-8 py-3 rounded-lg font-medium border border-white/10 text-gray-300 hover:text-white transition-colors">
+              📖 Learn More
             </a>
           </div>
         </div>
@@ -355,25 +359,25 @@ const Dashboard = () => {
       <div className="glass-card p-6 rounded-xl border border-white/10">
         <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
         <div className="space-y-3">
-          {[
-            { type: 'sync', user: 'Player1', time: '2 minutes ago', details: 'Data synchronized' },
-            { type: 'join', user: 'Player3', time: '5 minutes ago', details: 'Connected to dashboard' },
-            { type: 'update', user: 'Player2', time: '8 minutes ago', details: 'Coins updated: +150K' },
-            { type: 'sync', user: 'Player1', time: '12 minutes ago', details: 'Pet count updated: +2' },
-          ].map((activity, index) => (
-            <div key={index} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5">
-              <div className={`h-2 w-2 rounded-full ${
-                activity.type === 'sync' ? 'bg-green-400' :
-                activity.type === 'join' ? 'bg-blue-400' : 'bg-purple-400'
-              }`}></div>
-              <div className="flex-1">
-                <p className="text-sm text-white">
-                  <span className="font-medium">{activity.user}</span> - {activity.details}
-                </p>
-                <p className="text-xs text-gray-400">{activity.time}</p>
+          {players.length > 0 ? (
+            players.slice(0, 4).map((player, index) => (
+              <div key={player.username} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5">
+                <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                <div className="flex-1">
+                  <p className="text-sm text-white">
+                    <span className="font-medium">{player.username}</span> - Data synchronized
+                  </p>
+                  <p className="text-xs text-gray-400">{formatTime(player.lastUpdate)}</p>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <ClockIcon className="mx-auto h-8 w-8 text-gray-400" />
+              <p className="text-sm text-gray-400 mt-2">No recent activity</p>
+              <p className="text-xs text-gray-500 mt-1">Activity will appear here when players start syncing data</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
