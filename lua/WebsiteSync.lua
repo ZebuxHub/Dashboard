@@ -301,6 +301,12 @@ local function syncData()
         }
     }
     
+    -- Debug logging
+    log("📤 Sending payload:")
+    log("  Player: " .. (playerData.username or "unknown") .. " (ID: " .. (playerData.userId or "unknown") .. ")")
+    log("  Token: " .. (config.token and (config.token:sub(1, 10) .. "...") or "missing"))
+    log("  Data: Pets=" .. (inventoryData.totalPets or 0) .. ", Eggs=" .. (inventoryData.totalEggs or 0) .. ", Coins=" .. (inventoryData.coins or 0))
+    
     local success, response = makeRequest("/sync", "POST", syncPayload)
     
     if success then
