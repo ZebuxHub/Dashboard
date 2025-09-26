@@ -24,7 +24,9 @@ export const ApiProvider = ({ children }: ApiProviderProps) => {
       ? window.location.origin 
       : 'http://localhost:3000';
     
-    const url = `${baseUrl}/api${endpoint}`;
+    // Clean endpoint - remove leading /api if present
+    const cleanEndpoint = endpoint.startsWith('/api') ? endpoint.substring(4) : endpoint;
+    const url = `${baseUrl}/api${cleanEndpoint}`;
     
     const defaultOptions: RequestInit = {
       headers: {
