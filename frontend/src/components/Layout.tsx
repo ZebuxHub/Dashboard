@@ -14,7 +14,7 @@ import { useTheme } from '../contexts/ThemeContext';
 
 const Layout = () => {
   const { theme, toggleTheme } = useTheme();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
   const navigation = [
@@ -31,105 +31,80 @@ const Layout = () => {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Mobile sidebar backdrop */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:static lg:inset-0`}>
-        <div className="flex h-full flex-col glass-card border-r border-white/10">
-          {/* Logo */}
-          <div className="flex h-16 shrink-0 items-center px-6">
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark bg-gray-900' : 'bg-gray-50'} pb-20`}>
+      {/* Top Header - Simple */}
+      <header className="glass-card border-b border-white/10 sticky top-0 z-40">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            {/* Logo */}
             <div className="flex items-center space-x-3">
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">Z</span>
               </div>
               <h1 className="text-xl font-bold text-white">Zebux Dashboard</h1>
             </div>
-          </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-gray-300 rounded-lg hover:bg-white/10 hover:text-white transition-all duration-200"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? (
+                <SunIcon className="h-5 w-5" />
+              ) : (
+                <MoonIcon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <Outlet />
+        </div>
+      </main>
+
+      {/* Floating Bottom Navigation */}
+      <nav className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="glass-card px-6 py-3 rounded-2xl border border-white/20 shadow-2xl backdrop-blur-xl">
+          <div className="flex items-center space-x-6">
             {navigation.map((item) => {
               const Icon = item.icon;
+              const active = isActive(item.href);
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    isActive(item.href)
-                      ? 'bg-purple-600 text-white shadow-lg'
-                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                  className={`group flex flex-col items-center px-3 py-2 rounded-xl transition-all duration-300 ${
+                    active
+                      ? 'bg-purple-600 text-white shadow-lg scale-110'
+                      : 'text-gray-400 hover:text-white hover:bg-white/10'
                   }`}
-                  onClick={() => setSidebarOpen(false)}
+                  title={item.name}
                 >
-                  <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                  {item.name}
+                  <Icon className={`h-6 w-6 ${active ? 'mb-1' : ''} transition-all duration-300`} />
+                  {active && (
+                    <span className="text-xs font-medium">{item.name}</span>
+                  )}
                 </Link>
               );
             })}
-          </nav>
-
-          {/* Theme toggle */}
-          <div className="px-4 py-4 border-t border-white/10">
-            <button
-              onClick={toggleTheme}
-              className="flex w-full items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-white/10 hover:text-white transition-all duration-200"
-            >
-              {theme === 'dark' ? (
-                <SunIcon className="mr-3 h-5 w-5" />
-              ) : (
-                <MoonIcon className="mr-3 h-5 w-5" />
-              )}
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </button>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Main content */}
-      <div className="lg:pl-64">
-        {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 glass-card border-b border-white/10 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-          <button
-            type="button"
-            className="-m-2.5 p-2.5 text-gray-400 lg:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Bars3Icon className="h-6 w-6" />
-          </button>
-
-          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="flex flex-1 items-center">
-              <h2 className="text-lg font-semibold text-white">
-                {navigation.find(nav => isActive(nav.href))?.name || 'Dashboard'}
-              </h2>
-            </div>
-            
-            {/* Status indicator */}
-            <div className="flex items-center gap-x-4 lg:gap-x-6">
-              <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-300">Online</span>
-              </div>
-            </div>
+      {/* Status Footer */}
+      <footer className="fixed bottom-4 right-4 z-40">
+        <div className="glass-card px-4 py-2 rounded-lg border border-white/10">
+          <div className="flex items-center space-x-2">
+            <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-xs text-gray-400">Online</span>
           </div>
         </div>
-
-        {/* Page content */}
-        <main className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+      </footer>
     </div>
   );
 };
