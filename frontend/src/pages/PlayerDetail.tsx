@@ -26,6 +26,22 @@ interface PlayerData {
     eggs: number;
     mutations: number;
   };
+  inventory?: {
+    pets?: {
+      counts: Record<string, number>;
+      speeds: Record<string, {
+        total: number;
+        count: number;
+        average: number;
+        individual: number[];
+      }>;
+    };
+    eggs?: Record<string, number>;
+    mutations?: Record<string, number>;
+    totalPets?: number;
+    totalEggs?: number;
+    placedPets?: number;
+  };
   history: Array<{
     timestamp: string;
     coins: number;
