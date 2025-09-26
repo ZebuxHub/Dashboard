@@ -77,15 +77,26 @@ local function getInventoryData()
         fruits = {},
         eggs = {},
         pets = {},
-        mutations = {}
+        mutations = {},
+        totalPets = 0,
+        totalEggs = 0,
+        placedPets = 0
     }
     
     -- Try to get data from PlayerGui
     local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
-    if not playerGui then return inventory end
+    if not playerGui then 
+        log("❌ PlayerGui not found")
+        return inventory 
+    end
     
     local data = playerGui:FindFirstChild("Data")
-    if not data then return inventory end
+    if not data then 
+        log("❌ Data folder not found")
+        return inventory 
+    end
+    
+    log("✅ Found PlayerGui.Data")
     
     -- Get Coins/Money/NetWorth
     pcall(function()
@@ -142,6 +153,7 @@ local function getInventoryData()
     pcall(function()
         local eggFolder = data:FindFirstChild("Egg")
         if eggFolder then
+            log("✅ Found Egg folder with " .. #eggFolder:GetChildren() .. " items")
             local eggCounts = {}
             local totalEggs = 0
             for _, egg in ipairs(eggFolder:GetChildren()) do
@@ -156,6 +168,9 @@ local function getInventoryData()
             end
             inventory.eggs = eggCounts
             inventory.totalEggs = totalEggs
+            log("🥚 Found " .. totalEggs .. " available eggs")
+        else
+            log("❌ Egg folder not found")
         end
     end)
     
@@ -163,6 +178,7 @@ local function getInventoryData()
     pcall(function()
         local petsFolder = data:FindFirstChild("Pets")
         if petsFolder then
+            log("✅ Found Pets folder with " .. #petsFolder:GetChildren() .. " items")
             local petCounts = {}
             local petSpeeds = {}
             local petMutations = {}
@@ -215,6 +231,9 @@ local function getInventoryData()
             }
             inventory.totalPets = totalPets
             inventory.placedPets = placedPets
+            log("🐾 Found " .. totalPets .. " unplaced pets, " .. placedPets .. " placed pets")
+        else
+            log("❌ Pets folder not found")
         end
     end)
     
