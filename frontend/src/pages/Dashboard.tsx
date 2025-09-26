@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { useSocket } from '../contexts/SocketContext';
+import { useApi } from '../contexts/ApiContext';
 
 interface PlayerData {
   username: string;
@@ -86,25 +87,10 @@ const Dashboard = () => {
   useEffect(() => {
     loadDashboardData();
 
-    // Generate mock chart data
-    const mockChartData: ChartData[] = [];
-    for (let i = 23; i >= 0; i--) {
-      const time = new Date(Date.now() - i * 60 * 60 * 1000);
-      mockChartData.push({
-        time: time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        coins: Math.floor(Math.random() * 1000000) + 1000000,
-        pets: Math.floor(Math.random() * 20) + 20,
-        gems: Math.floor(Math.random() * 500) + 500
-      });
-    }
-    setChartData(mockChartData);
-
-    setStats({
-      totalPlayers: mockPlayers.length,
-      onlinePlayers: 2,
-      totalSyncs: 1247,
-      avgCoins: Math.floor(mockPlayers.reduce((sum, p) => sum + p.gameData.coins, 0) / mockPlayers.length)
-    });
+    // Refresh data every 30 seconds
+    const interval = setInterval(loadDashboardData, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Socket listeners
@@ -279,8 +265,9 @@ const Dashboard = () => {
           </div>
           
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
+            {selectedPlayer ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="coinsGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3}/>
@@ -306,6 +293,15 @@ const Dashboard = () => {
                 />
               </AreaChart>
             </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-300">No Player Selected</h3>
+                  <p className="mt-1 text-sm text-gray-400">Select a player to view their progress chart</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
