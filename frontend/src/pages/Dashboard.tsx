@@ -162,16 +162,28 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-          <p className="text-gray-400 mt-1">
-            Real-time game data tracking and analytics
+          <h1 className="text-4xl font-bold text-white">Welcome to Zebux</h1>
+          <p className="text-gray-400 mt-2 text-lg">
+            Real-time game data tracking and analytics dashboard
           </p>
         </div>
-        <div className="flex items-center space-x-2 glass-card px-4 py-2 rounded-lg border border-white/10">
-          <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-          <span className="text-sm text-gray-300 font-medium">
-            {isConnected ? 'Connected' : 'Disconnected'}
-          </span>
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 glass-card px-4 py-2 rounded-lg border border-white/10">
+            <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
+            <span className="text-sm text-gray-300 font-medium">
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </span>
+          </div>
+          <div className="glass-card px-4 py-2 rounded-lg border border-white/10">
+            <span className="text-sm text-gray-300">
+              {new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -205,40 +217,40 @@ const Dashboard = () => {
 
       {/* No Data State */}
       {players.length === 0 && (
-        <div className="glass-card p-8 lg:p-12 rounded-xl border border-white/10 text-center">
-          <div className="mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg">
-            <span className="text-white text-3xl">🎮</span>
+        <div className="glass-card p-12 lg:p-16 rounded-2xl border border-white/10 text-center">
+          <div className="mx-auto h-24 w-24 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-8 shadow-2xl">
+            <span className="text-white text-4xl">🎮</span>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-3">No Data Yet</h3>
-          <p className="text-gray-400 mb-8 max-w-lg mx-auto">
-            No players have synced their data yet. Get started by following these simple steps:
+          <h3 className="text-3xl font-bold text-white mb-4">Ready to Start Tracking?</h3>
+          <p className="text-gray-400 mb-12 max-w-2xl mx-auto text-lg">
+            No players have synced their data yet. Get started by following these simple steps and unlock powerful analytics for your gaming progress:
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-8">
-            <div className="glass-card p-6 rounded-lg border border-white/10">
-              <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold mx-auto mb-4">1</div>
-              <h4 className="text-white font-semibold mb-2">Generate Token</h4>
-              <p className="text-gray-400 text-sm">Create your unique API token</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
+            <div className="glass-card p-8 rounded-xl border border-white/10 hover:border-purple-500/50 transition-all duration-300 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">1</div>
+              <h4 className="text-white font-bold text-xl mb-3">Generate Token</h4>
+              <p className="text-gray-400">Create your unique API token to securely connect your game data</p>
             </div>
             
-            <div className="glass-card p-6 rounded-lg border border-white/10">
-              <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold mx-auto mb-4">2</div>
-              <h4 className="text-white font-semibold mb-2">Run Script</h4>
-              <p className="text-gray-400 text-sm">Execute Lua script in Roblox</p>
+            <div className="glass-card p-8 rounded-xl border border-white/10 hover:border-purple-500/50 transition-all duration-300 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">2</div>
+              <h4 className="text-white font-bold text-xl mb-3">Run Script</h4>
+              <p className="text-gray-400">Execute our Lua script in Roblox to start automatic data synchronization</p>
             </div>
             
-            <div className="glass-card p-6 rounded-lg border border-white/10">
-              <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold mx-auto mb-4">3</div>
-              <h4 className="text-white font-semibold mb-2">Watch Data</h4>
-              <p className="text-gray-400 text-sm">Monitor real-time progress</p>
+            <div className="glass-card p-8 rounded-xl border border-white/10 hover:border-purple-500/50 transition-all duration-300 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">3</div>
+              <h4 className="text-white font-bold text-xl mb-3">Watch Data</h4>
+              <p className="text-gray-400">Monitor your real-time progress with beautiful charts and analytics</p>
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/token" className="glass-button-enhanced inline-block px-8 py-3 rounded-lg font-medium">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <a href="/token" className="glass-button-enhanced inline-flex items-center px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300">
               🎫 Generate Token
             </a>
-            <a href="/about" className="glass-card inline-block px-8 py-3 rounded-lg font-medium border border-white/10 text-gray-300 hover:text-white transition-colors">
+            <a href="/about" className="glass-card inline-flex items-center px-10 py-4 rounded-xl font-semibold text-lg border border-white/10 text-gray-300 hover:text-white hover:border-purple-500/50 transition-all duration-300">
               📖 Learn More
             </a>
           </div>
