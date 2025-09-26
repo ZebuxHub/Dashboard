@@ -43,46 +43,48 @@ const Dashboard = () => {
   });
   const { socket, isConnected } = useSocket();
 
-  // Mock data for demonstration
-  useEffect(() => {
-    const mockPlayers: PlayerData[] = [
-      {
-        username: 'Player1',
-        lastUpdate: new Date().toISOString(),
-        gameData: {
-          coins: 1500000,
-          gems: 750,
-          pets: 30,
-          eggs: 15,
-          mutations: 5
-        }
-      },
-      {
-        username: 'Player2',
-        lastUpdate: new Date(Date.now() - 300000).toISOString(),
-        gameData: {
-          coins: 2500000,
-          gems: 1200,
-          pets: 45,
-          eggs: 8,
-          mutations: 12
-        }
-      },
-      {
-        username: 'Player3',
-        lastUpdate: new Date(Date.now() - 600000).toISOString(),
-        gameData: {
-          coins: 890000,
-          gems: 420,
-          pets: 22,
-          eggs: 18,
-          mutations: 3
-        }
-      }
-    ];
+  // Load real data from API
+  const { apiCall } = useApi();
 
-    setPlayers(mockPlayers);
-    setSelectedPlayer(mockPlayers[0]);
+  const loadDashboardData = async () => {
+    try {
+      // Load players data
+      const playersResponse = await apiCall('/players');
+      if (playersResponse.success && playersResponse.players.length > 0) {
+        setPlayers(playersResponse.players);
+        setSelectedPlayer(playersResponse.players[0]);
+      } else {
+        // Show empty state if no real data
+        setPlayers([]);
+        setSelectedPlayer(null);
+      }
+
+      // Load stats
+      const statsResponse = await apiCall('/admin/stats');
+      if (statsResponse.success) {
+        setStats({
+          totalPlayers: statsResponse.stats.totalUsers || 0,
+          onlinePlayers: statsResponse.stats.onlineUsers || 0,
+          totalSyncs: statsResponse.stats.totalSyncs || 0,
+          avgCoins: 0 // Calculate from players data
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+      // Show empty state on error
+      setPlayers([]);
+      setSelectedPlayer(null);
+      setStats({
+        totalPlayers: 0,
+        onlinePlayers: 0,
+        totalSyncs: 0,
+        avgCoins: 0
+      });
+    }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
 
     // Generate mock chart data
     const mockChartData: ChartData[] = [];
@@ -221,8 +223,41 @@ const Dashboard = () => {
         />
       </div>
 
+      {/* No Data State */}
+      {players.length === 0 && (
+        <div className="glass-card p-12 rounded-xl border border-white/10 text-center">
+          <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-6">
+            <span className="text-white text-2xl">🎮</span>
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">No Data Yet</h3>
+          <p className="text-gray-400 mb-6">
+            No players have synced their data yet. Get started by:
+          </p>
+          <div className="space-y-3 text-left max-w-md mx-auto">
+            <div className="flex items-center space-x-3">
+              <span className="flex-shrink-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">1</span>
+              <span className="text-gray-300">Generate a token in the Token Generator</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="flex-shrink-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">2</span>
+              <span className="text-gray-300">Run the Lua script in Roblox</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="flex-shrink-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">3</span>
+              <span className="text-gray-300">Wait for data to sync automatically</span>
+            </div>
+          </div>
+          <div className="mt-6">
+            <a href="/token" className="glass-button-enhanced inline-block px-6 py-2 rounded-lg">
+              Generate Token
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Charts and Player List */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {players.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chart */}
         <div className="lg:col-span-2 glass-card p-6 rounded-xl border border-white/10">
           <div className="flex items-center justify-between mb-6">
@@ -317,7 +352,8 @@ const Dashboard = () => {
             ))}
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Recent Activity */}
       <div className="glass-card p-6 rounded-xl border border-white/10">
