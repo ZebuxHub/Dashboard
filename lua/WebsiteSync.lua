@@ -138,49 +138,68 @@ local function getInventoryData()
         end
     end)
     
-    -- Get Eggs from Egg folder
+    -- Get Eggs from Egg folder (only available eggs - no subfolders)
     pcall(function()
         local eggFolder = data:FindFirstChild("Egg")
         if eggFolder then
             local eggCounts = {}
+            local totalEggs = 0
             for _, egg in ipairs(eggFolder:GetChildren()) do
-                if egg:IsA("Configuration") then
+                -- Only count eggs with no subfolders (available eggs)
+                if #egg:GetChildren() == 0 then
                     local eggType = egg:GetAttribute("T") or egg.Name
-                    eggCounts[eggType] = (eggCounts[eggType] or 0) + 1
+                    if eggType then
+                        eggCounts[eggType] = (eggCounts[eggType] or 0) + 1
+                        totalEggs = totalEggs + 1
+                    end
                 end
             end
             inventory.eggs = eggCounts
+            inventory.totalEggs = totalEggs
         end
     end)
     
-    -- Get Pets from Pets folder
+    -- Get Pets from Pets folder (only unplaced pets - no D attribute)
     pcall(function()
         local petsFolder = data:FindFirstChild("Pets")
         if petsFolder then
             local petCounts = {}
             local petSpeeds = {}
             local petMutations = {}
+            local totalPets = 0
+            local placedPets = 0
             
             for _, pet in ipairs(petsFolder:GetChildren()) do
                 if pet:IsA("Configuration") then
                     local petType = pet:GetAttribute("T") or pet.Name
                     local speed = pet:GetAttribute("S") or 0
                     local mutation = pet:GetAttribute("M") or "None"
+                    local dAttr = pet:GetAttribute("D") -- Placement attribute
                     
-                    -- Count pets by type
-                    petCounts[petType] = (petCounts[petType] or 0) + 1
+                    -- Check if pet is placed (has D attribute)
+                    local isPlaced = dAttr ~= nil and tostring(dAttr) ~= ""
                     
-                    -- Track speeds
-                    if not petSpeeds[petType] then
-                        petSpeeds[petType] = {total = 0, count = 0, individual = {}}
-                    end
-                    petSpeeds[petType].total = petSpeeds[petType].total + speed
-                    petSpeeds[petType].count = petSpeeds[petType].count + 1
-                    table.insert(petSpeeds[petType].individual, speed)
-                    
-                    -- Count mutations
-                    if mutation ~= "None" and mutation ~= "" then
-                        inventory.mutations[mutation] = (inventory.mutations[mutation] or 0) + 1
+                    if isPlaced then
+                        placedPets = placedPets + 1
+                    else
+                        -- Only count unplaced pets
+                        totalPets = totalPets + 1
+                        
+                        -- Count pets by type
+                        petCounts[petType] = (petCounts[petType] or 0) + 1
+                        
+                        -- Track speeds
+                        if not petSpeeds[petType] then
+                            petSpeeds[petType] = {total = 0, count = 0, individual = {}}
+                        end
+                        petSpeeds[petType].total = petSpeeds[petType].total + speed
+                        petSpeeds[petType].count = petSpeeds[petType].count + 1
+                        table.insert(petSpeeds[petType].individual, speed)
+                        
+                        -- Count mutations
+                        if mutation ~= "None" and mutation ~= "" then
+                            inventory.mutations[mutation] = (inventory.mutations[mutation] or 0) + 1
+                        end
                     end
                 end
             end
@@ -194,6 +213,8 @@ local function getInventoryData()
                 counts = petCounts,
                 speeds = petSpeeds
             }
+            inventory.totalPets = totalPets
+            inventory.placedPets = placedPets
         end
     end)
     
@@ -257,6 +278,12 @@ local function syncData()
     local playerData = getPlayerData()
     local inventoryData = getInventoryData()
     
+    -- Debug logging
+    log("Detected data: Pets=" .. (inventoryData.totalPets or 0) .. 
+        ", Eggs=" .. (inventoryData.totalEggs or 0) .. 
+        ", Coins=" .. (inventoryData.coins or 0) .. 
+        ", Gems=" .. (inventoryData.gems or 0))
+    
     local syncPayload = {
         player = playerData,
         inventory = inventoryData,
@@ -264,6 +291,13 @@ local function syncData()
         gameSession = {
             startTime = lastSync == 0 and os.time() or nil,
             duration = lastSync > 0 and (os.time() - lastSync) or 0
+        },
+        -- Simple format for dashboard compatibility
+        gameData = {
+            pets = inventoryData.totalPets or 0,
+            eggs = inventoryData.totalEggs or 0,
+            coins = inventoryData.coins or 0,
+            gems = inventoryData.gems or 0
         }
     }
     
