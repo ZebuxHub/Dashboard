@@ -1438,16 +1438,14 @@ local function runAutoOptimizePets()
                             -- Ensure there is at least one tile available for the type we will deploy
                             local wantWater = isOceanPetByUid(best.uid)
                             -- enforce category match: replace ocean with ocean, regular with regular
-                            if (best.isOcean == true) ~= (pet.isOcean == true) then
-                                goto continue_pet
-                            end
-                            local count, tiles = countAvailableTiles(wantWater)
-                            if count == 0 then
-                                ensureTileForType(wantWater)
-                                count, tiles = countAvailableTiles(wantWater)
-                            end
-                            if pickUpPet(pet.name) then
-                                task.wait(0.3)
+                            if (best.isOcean == true) == (pet.isOcean == true) then
+                                local count, tiles = countAvailableTiles(wantWater)
+                                if count == 0 then
+                                    ensureTileForType(wantWater)
+                                    count, tiles = countAvailableTiles(wantWater)
+                                end
+                                if pickUpPet(pet.name) then
+                                    task.wait(0.3)
                                     -- Auto sell by config rules
                                     if cfg.AutoSell then
                                         local doSell = true
@@ -1472,28 +1470,29 @@ local function runAutoOptimizePets()
                                         if doSell then sellPet(pet.name) end
                                     end
                                     if cfg.AutoDeploy then
-                                    -- try place best candidate
-                                    if count > 0 then
-                                        local tile = tiles[math.random(1, #tiles)]
-                                        placeUnitAtTile(tile, best.uid)
-                                        -- remove used candidate from list head
-                                        table.remove(candidates, 1)
-                                    else
-                                        -- If still no tile after ensure, attempt placing an egg to create occupancy
-                                        local placedEgg = placeAnyEggForType(wantWater)
-                                        if not placedEgg then
-                                            if ensureTileForType(wantWater) then
-                                                count, tiles = countAvailableTiles(wantWater)
-                                                if count > 0 then
-                                                    local tile2 = tiles[math.random(1, #tiles)]
-                                                    placeUnitAtTile(tile2, best.uid)
-                                                    table.remove(candidates, 1)
-                                    end
+                                        -- try place best candidate
+                                        if count > 0 then
+                                            local tile = tiles[math.random(1, #tiles)]
+                                            placeUnitAtTile(tile, best.uid)
+                                            -- remove used candidate from list head
+                                            table.remove(candidates, 1)
+                                        else
+                                            -- If still no tile after ensure, attempt placing an egg to create occupancy
+                                            local placedEgg = placeAnyEggForType(wantWater)
+                                            if not placedEgg then
+                                                if ensureTileForType(wantWater) then
+                                                    count, tiles = countAvailableTiles(wantWater)
+                                                    if count > 0 then
+                                                        local tile2 = tiles[math.random(1, #tiles)]
+                                                        placeUnitAtTile(tile2, best.uid)
+                                                        table.remove(candidates, 1)
+                                                    end
+                                                end
                                             end
-                            end
+                                        end
                                     end
-                        ::continue_pet::
-							end
+                                end
+                            end
 						end
                         end
                     end
