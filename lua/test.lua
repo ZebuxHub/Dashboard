@@ -844,14 +844,30 @@ local function runAutoSellSweep()
             local speedCut = tonumber(cfg.SellPetSpeedBelow) or 0
             local mutSet = {}
             for _, m in ipairs(cfg.SellPetMutations or {}) do mutSet[tostring(m)] = true end
+            local hasSpeedCut = speedCut > 0
+            local hasMutFilter = next(mutSet) ~= nil
             for _, it in ipairs(candidates) do
-                local doSell = true
-                if speedCut > 0 and (tonumber(it.speed) or 0) >= speedCut then
-                    doSell = false
+                local speedOk = true
+                if hasSpeedCut then
+                    -- Category-aware: compare against same threshold but per-category split could be added later
+                    speedOk = ((tonumber(it.speed) or 0) < speedCut)
                 end
-                if next(mutSet) ~= nil then
-                    local tag = tostring(it.mutation or "None")
-                    doSell = (mutSet[tag] == true)
+                local tag = tostring(it.mutation or "None")
+                local mutOk = true
+                if hasMutFilter then
+                    mutOk = (mutSet[tag] == true)
+                end
+                -- Optional: if you want different thresholds per category in the future,
+                -- read cfg.SellPetSpeedBelowOcean / SellPetSpeedBelowRegular here.
+                local doSell
+                if hasSpeedCut and hasMutFilter then
+                    doSell = speedOk and mutOk
+                elseif hasSpeedCut then
+                    doSell = speedOk
+                elseif hasMutFilter then
+                    doSell = mutOk
+                else
+                    doSell = false -- no filters configured → never bulk sell by accident
                 end
                 if doSell then
                     sellPet(it.uid)
@@ -1112,7 +1128,11 @@ local function getPlacedPetsWithSpeeds()
                             if parsed then speed = parsed end
                         end
                     end
-                    result[#result+1] = { name = pet.Name, model = pet, speed = speed or 0 }
+                    local isOcean = false
+                    pcall(function()
+                        isOcean = isOceanPetByUid and isOceanPetByUid(pet.Name) or false
+                    end)
+                    result[#result+1] = { name = pet.Name, model = pet, speed = speed or 0, isOcean = isOcean }
                 end
             end
         end
@@ -1146,7 +1166,11 @@ getInventoryUnplacedCandidates = function()
                 local speed = parseNumberWithSuffix(txt) or 0
                 local mut = node:GetAttribute("M")
                 if mut == "Dino" then mut = "Jurassic" end
-                out[#out+1] = { uid = node.Name, speed = speed, mutation = mut }
+                local isOcean = false
+                pcall(function()
+                    isOcean = isOceanPetByUid and isOceanPetByUid(node.Name) or false
+                end)
+                out[#out+1] = { uid = node.Name, speed = speed, mutation = mut, isOcean = isOcean }
             end
         end
     end
@@ -1257,6 +1281,18 @@ local function averageSpeed(list)
     return sum / n
 end
 
+local function averageByCategory(list, wantOcean)
+    local sum, n = 0, 0
+    for _, item in ipairs(list) do
+        if (item.isOcean == true) == (wantOcean == true) then
+            sum = sum + (tonumber(item.speed) or 0)
+            n = n + 1
+        end
+    end
+    if n == 0 then return 0 end
+    return sum / n
+end
+
 local function pickUpPet(uid)
     if not CharacterRE then return false end
     local ok = pcall(function()
@@ -1347,7 +1383,7 @@ local function runAutoOptimizePets()
                             elseif requireMut then
                                 allowed = (mut ~= nil)
                             end
-                            if Config.Debug then
+                            if Config.Debug and (not allowed) then
                                 print("[EnforceMut] pet=", pet.name, "mut=", tostring(mut), "allowed=", allowed)
                             end
                             if not allowed then
@@ -1374,13 +1410,15 @@ local function runAutoOptimizePets()
                 end
             end
 
-            -- 3) Compute average from currently placed pets
+            -- 3) Compute per-category averages from currently placed pets
             local placed = getPlacedPetsWithSpeeds()
-            local avg = averageSpeed(placed)
-            if #placed > 0 and avg > 0 then
+            local avgOcean = averageByCategory(placed, true)
+            local avgRegular = averageByCategory(placed, false)
+            if #placed > 0 and (avgOcean > 0 or avgRegular > 0) then
                 local candidates = getInventoryUnplacedCandidates()
                 for _, pet in ipairs(placed) do
-                    if pet.speed and pet.speed > 0 and pet.speed < avg then
+                    local petAvg = pet.isOcean and avgOcean or avgRegular
+                    if pet.speed and pet.speed > 0 and petAvg > 0 and pet.speed < petAvg then
                         -- Skip big pets entirely for pickup/sell logic
                         local isBigPlaced = false
                         do
@@ -1399,6 +1437,10 @@ local function runAutoOptimizePets()
 							if best and best.speed > pet.speed then
                             -- Ensure there is at least one tile available for the type we will deploy
                             local wantWater = isOceanPetByUid(best.uid)
+                            -- enforce category match: replace ocean with ocean, regular with regular
+                            if (best.isOcean == true) ~= (pet.isOcean == true) then
+                                goto continue_pet
+                            end
                             local count, tiles = countAvailableTiles(wantWater)
                             if count == 0 then
                                 ensureTileForType(wantWater)
@@ -1429,7 +1471,7 @@ local function runAutoOptimizePets()
                                         end
                                         if doSell then sellPet(pet.name) end
                                     end
-                                if cfg.AutoDeploy then
+                                    if cfg.AutoDeploy then
                                     -- try place best candidate
                                     if count > 0 then
                                         local tile = tiles[math.random(1, #tiles)]
@@ -1446,11 +1488,11 @@ local function runAutoOptimizePets()
                                                     local tile2 = tiles[math.random(1, #tiles)]
                                                     placeUnitAtTile(tile2, best.uid)
                                                     table.remove(candidates, 1)
-                                                end
-                                            end
-                                        end
                                     end
-                                end
+                                            end
+                            end
+                                    end
+                        ::continue_pet::
 							end
 						end
                         end
