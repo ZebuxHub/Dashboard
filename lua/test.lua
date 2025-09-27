@@ -149,8 +149,45 @@ local OCEAN_EGGS = {
 	["AnglerfishEgg"] = true, ["OctopusEgg"] = true, ["SeaDragonEgg"] = true,
 }
 
+-- Cache for ReplicatedStorage.Config.ResEgg (load once, keep in memory)
+local CachedResEggTable = nil
+local function getResEggTable()
+	if CachedResEggTable ~= nil then return CachedResEggTable end
+	local cfg = ReplicatedStorage:FindFirstChild("Config")
+	local mod = cfg and cfg:FindFirstChild("ResEgg")
+	if mod and mod:IsA("ModuleScript") then
+		local ok, tbl = pcall(function()
+			return require(mod)
+		end)
+		if ok and type(tbl) == "table" then
+			CachedResEggTable = tbl
+			return CachedResEggTable
+		end
+	end
+	-- mark as failed to avoid repeated attempts this session
+	CachedResEggTable = false
+	return nil
+end
+
 local function isOceanEgg(eggType)
-	return eggType and OCEAN_EGGS[tostring(eggType)] == true
+	if not eggType then return false end
+	local res = getResEggTable()
+	if type(res) == "table" then
+		local entry = res[tostring(eggType)]
+		if type(entry) == "table" then
+			local cat = entry.Category or entry.Catagory
+			if type(cat) == "string" then
+				local c = string.lower(cat)
+				if string.find(c, "ocean") then
+					return true
+				else
+					return false
+				end
+			end
+		end
+	end
+	-- Fallback to static map only if module not usable
+	return OCEAN_EGGS[tostring(eggType)] == true
 end
 
 local function findIsland()
