@@ -627,6 +627,9 @@ local function runAutoPlace()
                 for _, m in ipairs(readConfig().PlaceMutations or {}) do cfgPlaceMuts[tostring(m)] = true end
                 for _, egg in ipairs(eggs) do
                     local wantWater = isOceanEgg(egg.type)
+                    -- quick per-type skip if current free for that type is zero
+                    local typeHasFree = (wantWater and waterFree > 0) or ((not wantWater) and regFree > 0)
+                    if typeHasFree then
                     local count, tiles = countAvailableTiles(wantWater)
                     -- If no tiles available at placement time, attempt a quick unlock pass
                     if count == 0 and cfg.AutoUnlock then
@@ -652,6 +655,8 @@ local function runAutoPlace()
                             end
                             -- Re-check tiles after unlock
                             count, tiles = countAvailableTiles(wantWater)
+                            -- refresh per-type cache so subsequent eggs skip quickly
+                            if wantWater then waterFree = count else regFree = count end
                         end
                     end
                     -- Filters: type and mutation
@@ -667,10 +672,10 @@ local function runAutoPlace()
                     elseif reqMut then
                         allowMut = (egg.mutation ~= nil)
                     end
-                    if Config.Debug then
-                        print("[PlaceFilter] egg=", egg.uid, "type=", egg.type, "mutation=", tostring(egg.mutation), "allowType=", allowType, "allowMut=", allowMut)
-                    end
                     if count > 0 and allowType and allowMut then
+                        if Config.Debug then
+                            print("[PlaceFilter] egg=", egg.uid, "type=", egg.type, "mutation=", tostring(egg.mutation), "allowType=", allowType, "allowMut=", allowMut)
+                        end
                         local tile = tiles[math.random(1, #tiles)]
                         if focusEgg(egg.uid) then
                             if placeEggAtTile(tile, egg.uid) then
@@ -678,7 +683,11 @@ local function runAutoPlace()
                                 task.wait(0.2)
                             end
                         end
+                        -- decrement per-type free estimate
+                        if wantWater and waterFree > 0 then waterFree = waterFree - 1 end
+                        if (not wantWater) and regFree > 0 then regFree = regFree - 1 end
                     end
+                    end -- typeHasFree
                     task.wait(0.05)
                 end
                 end
@@ -1219,7 +1228,7 @@ local function pickUpPet(uid)
     return ok == true
 end
 
-local function sellPet(uid)
+function sellPet(uid)
     if not PetRE then return false end
     local ok = pcall(function()
         PetRE:FireServer("Sell", uid)
@@ -1227,7 +1236,7 @@ local function sellPet(uid)
     return ok == true
 end
 
-local function sellEggByUid(eggUid)
+function sellEggByUid(eggUid)
     if not PetRE then return false end
     local ok = pcall(function()
         PetRE:FireServer("Sell", eggUid, true)
@@ -1240,7 +1249,7 @@ function placeUnitAtTile(farmPart, uid)
 end
 
 local OCEAN_KEYWORDS = { "fish","shark","octopus","sea","angler","dolphin","whale","manta","turtle","eel","seal","ray" }
-local function isOceanPetByUid(uid)
+function isOceanPetByUid(uid)
     local pg = LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui")
     local data = pg and pg:FindFirstChild("Data")
     local pets = data and data:FindFirstChild("Pets")
@@ -1529,5 +1538,7 @@ task.spawn(function()
 		task.wait(1)
 	end
 end)
+
+
 
 
