@@ -1314,9 +1314,22 @@ local function runAutoOptimizePets()
                                 print("[EnforceMut] pet=", pet.name, "mut=", tostring(mut), "allowed=", allowed)
                             end
                             if not allowed then
-                                if pickUpPet(pet.name) then
-                                    task.wait(0.1)
-                                    if readConfig().AutoSell then sellPet(pet.name) end
+                                -- Only act if ALSO matches AutoSell criteria (mutation list and/or speed cut)
+                                local cfg2 = readConfig()
+                                local doAct = true
+                                local scut = tonumber(cfg2.SellPetSpeedBelow) or 0
+                                if scut > 0 and (tonumber(pet.speed) or 0) >= scut then doAct = false end
+                                local mset = {}
+                                for _, mm in ipairs(cfg2.SellPetMutations or {}) do mset[tostring(mm)] = true end
+                                if next(mset) ~= nil then
+                                    local tag = tostring(mut or "None")
+                                    doAct = doAct and (mset[tag] == true)
+                                end
+                                if doAct then
+                                    if pickUpPet(pet.name) then
+                                        task.wait(0.1)
+                                        if cfg2.AutoSell then sellPet(pet.name) end
+                                    end
                                 end
                             end
                         end
